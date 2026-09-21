@@ -1,0 +1,10 @@
+{
+  "name": "Tunisian Algorithm Studio",
+  "short_name": "Algo Studio",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#070b16",
+  "theme_color": "#0b1020",
+  "description": "Compiler, runner and debugger for Tunisian high-school algorithmique.",
+  "icons": []
+}
