@@ -1,0 +1,76 @@
+name: Build APK
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android packages
+        run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
+
+      - name: Create Android project tree from flat files
+        run: |
+          rm -rf app generated
+          mkdir -p app/src/main/java/com/example/flatapp
+          mkdir -p app/src/main/assets
+          mkdir -p app/src/main/res/values
+
+          cp MainActivity.java app/src/main/java/com/example/flatapp/MainActivity.java
+          cp index.html app/src/main/assets/index.html
+          cat > app/src/main/res/values/styles.xml <<'STYLE'
+          <?xml version="1.0" encoding="utf-8"?>
+          <resources>
+              <style name="AppTheme" parent="android:style/Theme.Material.Light.NoActionBar" />
+          </resources>
+          STYLE
+
+          cp AndroidManifest.xml app/src/main/AndroidManifest.xml
+
+          cat > app/build.gradle <<'GRADLE'
+          plugins {
+              id 'com.android.application'
+          }
+
+          android {
+              namespace 'com.example.flatapp'
+              compileSdk 35
+
+              defaultConfig {
+                  applicationId 'com.example.flatapp'
+                  minSdk 23
+                  targetSdk 35
+                  versionCode 1
+                  versionName '1.0'
+              }
+          }
+          GRADLE
+
+      - name: Install Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.10.2'
+
+      - name: Build debug APK
+        run: gradle assembleDebug --no-daemon
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: flat-apk-app
+          path: app/build/outputs/apk/debug/app-debug.apk
